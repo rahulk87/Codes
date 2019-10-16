@@ -73,3 +73,48 @@ abline(h=1.30103, col = "blue",lty=2)
 abline(v=0.5, col = "blue",lty=2)
 abline(v=-0.5, col = "blue",lty=2)
 dev.off()
+
+## FOXP3 expression
+foxp3_exp <- as.data.frame(melt(subset(tpm, tpm$Gene=="FOXP3")))
+foxp3_exp <- merge(foxp3_exp, design, by.x="variable", by.y="row.names")
+
+pdf("FOXP3_expression_TPM.pdf")
+p <- ggplot(foxp3_exp, aes(Condition, value))
+     + geom_boxplot() + geom_jitter(size=3, alpha=1/1.5, width = 0.2, aes(colour=Condition))
+     + theme(text = element_text(size=20)) + theme(legend.position="none")
+     + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+     + theme(axis.title.x=element_blank())
+     + scale_x_discrete(limits=c("Untreated", "Treated"))
+     + labs(y = "FOXP3 expression (TPM)") + ylim(0, 15)
+print(p)
+dev.off()
+
+## PCA clustering plot
+mat <- res_sig
+rownames(mat) <- mat$Gene
+mat <- mat[,c(17:22)]
+colnames(mat) <- gsub(".y", "", colnames(mat))
+mat <- as.data.frame(t(mat))
+mat <- merge(mat, design, by="row.names")
+rownames(mat) <- mat$Row.names
+
+pdf("PCA_plot.pdf", width=8,height=6)
+autoplot(prcomp(mat[2:2196]), data = mat, colour = 'Condition', label = TRUE, label.size = 3) + theme(text = element_text(size=20)) + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+dev.off()
+
+## Expression heatmap 
+mat <- read.table("Z_score_for_heatmap.txt", sep="\t", header=T)
+
+df <- data.frame(Condition = c(rep("Untreated", 3), rep("Treated", 3)))
+ha = HeatmapAnnotation(df = df, col = list(Condition = c("Untreated" = "#DD292A", "Treated" = "#4FBFAD")), show_annotation_name = TRUE)
+
+pdf("heatmap_all_without_row_names.pdf", height=6, width=5)
+Heatmap(mat, top_annotation = ha, show_row_names = FALSE, heatmap_legend_param = list(title="Z-score"))
+dev.off()
+
+tgf_genes <- c("BAMBI", "CBL", "CGN", "F11R", "FKBP1A", "FURIN", "MTMR4", "NEDD4L", "NEDD8", "PARD3", "PARD6A", "PMEPA1", "PPP1CA", "PPP1CB", "PPP1CC", "PPP1R15A", "PRKCZ", "RHOA", "RPS27A", "SMAD2", "SMAD3", "SMAD4", "SMAD7", "SMURF1", "SMURF2", "STRAP", "STUB1", "TGFB1", "TGFBR1", "TGFBR2", "UBA52", "UBB", "UBC", "UBE2M", "UCHL5", "USP15", "XPO1", "ZFYVE9", "FOXP3")
+
+mat <- subset(mat, rownames(mat) %in% tgf_genes)
+pdf("heatmap_tgfB_genes.pdf", height=3, width=4)
+Heatmap(mat, row_names_gp = gpar(fontsize = 6), column_names_gp = gpar(fontsize = 6), top_annotation = ha, show_row_names = TRUE, heatmap_legend_param = list(title="Z-score"))
+dev.off()
