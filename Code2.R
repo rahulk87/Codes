@@ -1,5 +1,4 @@
 ## Script for doing differential expression analysis using DESeq2 package in R
-## Author: Dr. Rahul Kumar
 
 library(DESeq2)
 library(ggplot2)
